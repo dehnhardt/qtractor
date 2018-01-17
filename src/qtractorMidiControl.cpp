@@ -311,14 +311,14 @@ bool qtractorMidiControl::processEvent ( const qtractorCtlEvent& ctle )
 	float fValue;
 	float fCurrentValue;
 	switch (val.command()) {
+	case PING:
+		fValue = scale.valueFromMidi(ctle.value());
+		bResult = pSession->execute(
+			new qtractorTrackGainCommand(pTrack, ctlv.value(), true, 1));
+		break;
 	case TRACK_GAIN:
 		fValue = scale.valueFromMidi(ctle.value());
 		if (pTrack->trackType() == qtractorTrack::Audio)
-			/*
-			** For some reason the gain value of audio tracks has a range from
-			** nearly 0 to 2.
-			** This hack 'translates' the incoming controller data to this behaviour.
-			*/
 			fValue = ::cubef2(fValue) * 2;
 		if (ctlv.sync(fValue, pTrack->gain())) {
 			bResult = pSession->execute(
@@ -411,13 +411,10 @@ void qtractorMidiControl::sendTrackController (
 			const ControlScale scale(ctype, val.commandMode());
 			unsigned short iValue = 0;
 			switch (command) {
+			case PING:
+				iValue = scale.midiFromValue(fValue);
+				break;
 			case TRACK_GAIN:
-				/*
-				** For some reason the gain value of audio tracks has a range from
-				** nearly 0 (there is some kind of offset) to 2.
-				** This hack 'translates' the outgoing controller data to this behaviour.
-				** Otherwise the value range of common controllers is exceeded.
-				*/
 				if (bCubic) fValue = ::cbrtf2(fValue/2);
 				iValue = scale.midiFromValue(fValue);
 				break;
@@ -456,14 +453,10 @@ void qtractorMidiControl::sendTrackController (
 	unsigned short iValue = 0;
 
 	switch (command) {
+	case PING:
+		break;
 	case TRACK_GAIN:
 		if (pTrack->trackType() == qtractorTrack::Audio)
-			/*
-			** For some reason the gain value of audio tracks has a range from
-			** nearly 0 (there is some kind of offset) to 2.
-			** This hack 'translates' the outgoing controller data to this behaviour.
-			** Otherwise the value range of common controllers is exceeded.
-			*/
 			iValue = scale.midiFromValue(::cbrtf2(pTrack->gain()/2));
 		else
 			iValue = scale.midiFromValue(pTrack->gain());
@@ -916,11 +909,12 @@ static struct
 	const char *name;
 } g_aCommandModes[] = {
 
-	{ qtractorMidiControl::VALUE,          "VALUE",         _TR("Value")    },
-	{ qtractorMidiControl::SWITCH_BUTTON,  "SWITCH_BUTTON", _TR("Switch Button")    },
-	{ qtractorMidiControl::PUSH_BUTTON,    "PUSH_BUTTON",   _TR("Push Button") },
-	{ qtractorMidiControl::ENCODER,        "ENCODER",       _TR("Encoder") },
-	{ qtractorMidiControl::CommandMode(0), NULL,            NULL }
+	{ qtractorMidiControl::VALUE,            "VALUE",         _TR("Value")    },
+	{ qtractorMidiControl::LATCH_BUTTON,     "SWITCH_BUTTON", _TR("Switch Button")    },
+	{ qtractorMidiControl::MOMENTARY_BUTTON, "PUSH_BUTTON",   _TR("Push Button") },
+	{ qtractorMidiControl::STEP_ENCODER,     "STEP_ENCODER",  _TR("Step Encoder") },
+	{ qtractorMidiControl::DELTA_ENCODER,    "DELTA_ENCODER", _TR("Delta Encoder") },
+	{ qtractorMidiControl::CommandMode(0),   NULL,            NULL }
 };
 
 static QHash<qtractorMidiControl::CommandMode, QString> g_commandModeTexts;
@@ -998,6 +992,7 @@ static struct
 
 } g_aCommandNames[] = {
 
+	{ qtractorMidiControl::PING,		  "PING",          _TR("PING")          },
 	{ qtractorMidiControl::TRACK_GAIN,    "TRACK_GAIN",    _TR("Track Gain")    },
 	{ qtractorMidiControl::TRACK_PANNING, "TRACK_PANNING", _TR("Track Panning") },
 	{ qtractorMidiControl::TRACK_MONITOR, "TRACK_MONITOR", _TR("Track Monitor") },
@@ -1066,6 +1061,9 @@ qtractorMidiControl::Command qtractorMidiControl::commandFromText (
 	else
 	if (sText == "TRACK_SOLO" || sText == "TrackSolo")
 		return TRACK_SOLO;
+	else
+	if (sText == "PING" || sText == "Ping")
+		return PING;
 	else
 		return Command(0);
 #endif

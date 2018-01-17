@@ -118,6 +118,8 @@ qtractorMidiControlForm::qtractorMidiControlForm (
 	const QIcon iconCommand(":/images/itemChannel.png");
 //	m_ui.CommandComboBox->clear();
 	m_ui.CommandComboBox->addItem(iconCommand,
+		qtractorMidiControl::nameFromCommand(qtractorMidiControl::PING));
+	m_ui.CommandComboBox->addItem(iconCommand,
 		qtractorMidiControl::nameFromCommand(qtractorMidiControl::TRACK_GAIN));
 	m_ui.CommandComboBox->addItem(iconCommand,
 		qtractorMidiControl::nameFromCommand(qtractorMidiControl::TRACK_PANNING));
@@ -619,6 +621,10 @@ void qtractorMidiControlForm::stabilizeControlChange(){
 void qtractorMidiControlForm::refreshCommandModeComboBox( qtractorMidiControl::Command command ){
 	m_ui.CommandModeComboBox->clear();
 	switch (command) {
+	case qtractorMidiControl::PING:
+		m_ui.CommandModeComboBox->addItem(
+			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::VALUE), qtractorMidiControl::VALUE);
+		break;
 	case qtractorMidiControl::TRACK_MONITOR:
 	case qtractorMidiControl::TRACK_RECORD:
 	case qtractorMidiControl::TRACK_MUTE:
@@ -626,13 +632,15 @@ void qtractorMidiControlForm::refreshCommandModeComboBox( qtractorMidiControl::C
 		m_ui.CommandModeComboBox->addItem(
 			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::VALUE), qtractorMidiControl::VALUE);
 		m_ui.CommandModeComboBox->addItem(
-			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::SWITCH_BUTTON), qtractorMidiControl::SWITCH_BUTTON);
+			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::LATCH_BUTTON), qtractorMidiControl::LATCH_BUTTON);
 		m_ui.CommandModeComboBox->addItem(
-			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::PUSH_BUTTON), qtractorMidiControl::PUSH_BUTTON);
+			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::MOMENTARY_BUTTON), qtractorMidiControl::MOMENTARY_BUTTON);
 		break;
 	case qtractorMidiControl::TRACK_PANNING:
 		m_ui.CommandModeComboBox->addItem(
-			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::ENCODER), qtractorMidiControl::ENCODER);
+			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::STEP_ENCODER), qtractorMidiControl::STEP_ENCODER);
+		m_ui.CommandModeComboBox->addItem(
+			qtractorMidiControl::nameFromCommandMode(qtractorMidiControl::DELTA_ENCODER), qtractorMidiControl::DELTA_ENCODER);
 	case qtractorMidiControl::TRACK_GAIN:
 	default:
 		m_ui.CommandModeComboBox->addItem(

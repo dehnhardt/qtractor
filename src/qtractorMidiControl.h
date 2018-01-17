@@ -51,6 +51,7 @@ public:
 
 	// Controller command types.
 	enum Command {
+		PING	      = 0,
 		TRACK_GAIN    = 1,
 		TRACK_PANNING = 2,
 		TRACK_MONITOR = 3,
@@ -61,10 +62,11 @@ public:
 
 	// Controller command modes.
 	enum CommandMode {
-		VALUE         = 1,
-		SWITCH_BUTTON = 2,
-		PUSH_BUTTON   = 3,
-		ENCODER		  = 4
+		VALUE            = 1,
+		LATCH_BUTTON     = 2,
+		MOMENTARY_BUTTON = 3,
+		STEP_ENCODER	 = 4,
+		DELTA_ENCODER    = 5
 	};
 
 	// Key param masks (wildcard flags).
@@ -150,7 +152,7 @@ public:
 	public:
 
 		// Constructor.
-		MapVal(Command command = Command(0), CommandMode commandMode = PUSH_BUTTON, int iTrack = 0, bool bFeedback = false)
+		MapVal(Command command = Command(0), CommandMode commandMode = MOMENTARY_BUTTON, int iTrack = 0, bool bFeedback = false)
 			: m_command(command), m_commandMode(commandMode), m_iTrack(iTrack), m_bFeedback(bFeedback) {}
 
 		// Command accessors
@@ -421,7 +423,7 @@ protected:
 			{
 			float fValue = 0.0f;
 			switch(m_commandMode){
-			case ENCODER:
+			case STEP_ENCODER:
 				if( iValue == m_iMidScale) return 0.0f;
 				fValue = iValue > m_iMidScale ? fCurrentValue - 0.1f : fCurrentValue + 0.1f;
 				if( ( fValue >=  -1 ) && ( fValue <= 1 ) )
@@ -429,8 +431,8 @@ protected:
 				else
 					return fCurrentValue;
 			case VALUE:
-			case SWITCH_BUTTON:
-			case PUSH_BUTTON:
+			case LATCH_BUTTON:
+			case MOMENTARY_BUTTON:
 			default:
 				return float(int(iValue) - m_iMidScale) / m_fMidScale;
 			}
@@ -443,15 +445,15 @@ protected:
 		float valueToggledFromMidi(unsigned short iValue, float fCurrentValue = 0.0f ) const
 		{
 			switch(m_commandMode){
-			case PUSH_BUTTON:
+			case MOMENTARY_BUTTON:
 				// do nohing if value lower than max
 				if( iValue < m_iMaxScale)
 					return fCurrentValue;
 				// else toggle current state
 				return( fCurrentValue == 0.0f ? 1.0f : 0.0f );
-			case SWITCH_BUTTON:
+			case LATCH_BUTTON:
 			case VALUE:
-			case ENCODER:
+			case STEP_ENCODER:
 			default:
 				return (iValue > m_iMidScale ? 1.0f : 0.0f);
 			}
